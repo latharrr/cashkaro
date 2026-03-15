@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getGroupById } from "../../../../lib/data";
 import { computeTierState } from "../../../../lib/tiers";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 
 const REFERRAL_CODE = "DEMO50";
 const SHARE_URL = "campusdeal.in/deal/";
@@ -35,6 +37,59 @@ export default function GroupJoined() {
     }));
     setConfetti(pieces);
   }, [group_id]);
+
+  // Post-Join Product Tour
+  useEffect(() => {
+    if (!group || localStorage.getItem("campusdeal_postjoin_tour_completed")) return;
+    
+    // Wait for confetti and initial render (e.g. 2.5 seconds)
+    const timer = setTimeout(() => {
+      const driverObj = driver({
+        showProgress: true,
+        allowClose: true,
+        doneBtnText: "Done",
+        nextBtnText: "Next &rarr;",
+        prevBtnText: "&larr; Prev",
+        onDestroyStarted: () => {
+          localStorage.setItem("campusdeal_postjoin_tour_completed", "true");
+          driverObj.destroy();
+        },
+        steps: [
+          {
+            element: "#tour-postjoin-status",
+            popover: {
+              title: "Spot Locked! ✅",
+              description: "You've successfully joined the deal. Your price is locked in, but wait... it can get even better!",
+              side: "bottom",
+              align: "start"
+            }
+          },
+          {
+            element: "#tour-postjoin-tier",
+            popover: {
+              title: "Unlock Bigger Discounts 💸",
+              description: "This shows how many more people need to join for the price to drop to the next tier for everyone.",
+              side: "top",
+              align: "start"
+            }
+          },
+          {
+            element: "#tour-postjoin-share",
+            popover: {
+              title: "Share & Earn! 🎁",
+              description: "Share this link in your hostel groups. The more people join, the cheaper it gets. Plus, you get ₹50 cashback for every referral!",
+              side: "top",
+              align: "start"
+            }
+          }
+        ]
+      });
+
+      driverObj.drive();
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [group]);
 
   if (!group) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
@@ -92,7 +147,7 @@ export default function GroupJoined() {
         <div style={{ padding: "0 20px" }}>
 
           {/* Tier achieved card */}
-          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "18px", padding: "20px", marginBottom: "20px" }}>
+          <div id="tour-postjoin-status" style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "18px", padding: "20px", marginBottom: "20px" }}>
             <div style={{ fontSize: "12px", fontWeight: "800", color: "var(--text-muted)", letterSpacing: "1.5px", marginBottom: "12px" }}>YOUR DEAL</div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
@@ -113,7 +168,7 @@ export default function GroupJoined() {
 
           {/* Viral loop — share card */}
           {nextTier && (
-            <div style={{ background: "linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.04))", border: "1px solid rgba(239,68,68,0.25)", borderRadius: "18px", padding: "20px", marginBottom: "20px", position: "relative", overflow: "hidden" }}>
+            <div id="tour-postjoin-tier" style={{ background: "linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.04))", border: "1px solid rgba(239,68,68,0.25)", borderRadius: "18px", padding: "20px", marginBottom: "20px", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", right: "-30px", top: "-30px", width: "120px", height: "120px", background: "var(--primary)", filter: "blur(60px)", opacity: 0.15 }} />
 
               <div style={{ display: "inline-block", background: "rgba(239,68,68,0.15)", color: "var(--primary)", fontSize: "11px", fontWeight: "800", letterSpacing: "1.5px", padding: "4px 10px", borderRadius: "20px", marginBottom: "14px" }}>
@@ -150,7 +205,7 @@ export default function GroupJoined() {
           )}
 
           {/* Your referral link */}
-          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "16px", padding: "18px", marginBottom: "20px" }}>
+          <div id="tour-postjoin-share" style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "16px", padding: "18px", marginBottom: "20px" }}>
             <div style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-muted)", marginBottom: "10px" }}>YOUR REFERRAL LINK</div>
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
               <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: "10px", padding: "10px 14px", fontSize: "13px", color: "white", fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

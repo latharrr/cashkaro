@@ -127,6 +127,9 @@ function DealCard({ group }) {
   );
 }
 
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
 // ── Main Feed Page ───────────────────────────────────────────────────────────
 export default function Feed() {
   const allGroups = getGroupsWithProducts();
@@ -157,10 +160,70 @@ export default function Feed() {
   // Stats bar
   const totalJoined = groups.reduce((s, g) => s + g.member_count, 0);
 
+  // Product Tour
+  useEffect(() => {
+    if (localStorage.getItem("campusdeal_tour_completed")) return;
+
+    // Slight delay to ensure elements are rendered
+    setTimeout(() => {
+      const driverObj = driver({
+        showProgress: true,
+        allowClose: true,
+        doneBtnText: "Done",
+        nextBtnText: "Next &rarr;",
+        prevBtnText: "&larr; Prev",
+        onDestroyStarted: () => {
+          localStorage.setItem("campusdeal_tour_completed", "true");
+          driverObj.destroy();
+        },
+        steps: [
+          {
+            element: "#tour-header",
+            popover: {
+              title: "Welcome to CampusDeal! 👋",
+              description: "Join group deals with your hostel mates to unlock massive bulk discounts and CashKaro cashback.",
+              side: "bottom",
+              align: "start"
+            }
+          },
+          {
+            element: "#tour-hero",
+            popover: {
+              title: "Exclusive to LPU 🎓",
+              description: "All deals are hyperlocal and curated specifically for LPU students. Get exactly what you need delivered together.",
+              side: "bottom",
+              align: "start"
+            }
+          },
+          {
+            element: "#tour-categories",
+            popover: {
+              title: "Find What You Need 🔍",
+              description: "Filter deals by categories like Electronics, Groceries, or Hostel Needs to quickly find the best group buys.",
+              side: "bottom",
+              align: "start"
+            }
+          },
+          {
+            element: "#tour-first-deal",
+            popover: {
+              title: "Join a Deal! 🚀",
+              description: "See a deal you like? The more students that join, the bigger the discount for everyone. Let's start saving!",
+              side: "top",
+              align: "start"
+            }
+          }
+        ]
+      });
+
+      driverObj.drive();
+    }, 500);
+  }, []);
+
   return (
     <div style={{ minHeight: "100vh", background: "var(--background)" }}>
       {/* Sticky Top Nav */}
-      <header style={{
+      <header id="tour-header" style={{
         position: "sticky", top: 0, zIndex: 100, padding: "14px 20px",
         display: "flex", justifyContent: "space-between", alignItems: "center",
         background: "rgba(9,9,11,0.85)", backdropFilter: "blur(16px)",
@@ -185,7 +248,7 @@ export default function Feed() {
       </header>
 
       {/* Hero Banner */}
-      <div style={{ padding: "20px 20px 0" }}>
+      <div id="tour-hero" style={{ padding: "20px 20px 0" }}>
         <div style={{ background: "linear-gradient(135deg,#18181b,#27272a)", border: "1px solid var(--border)", borderRadius: "18px", padding: "22px", position: "relative", overflow: "hidden", marginBottom: "6px" }}>
           <div style={{ position: "absolute", right: "-30px", top: "-30px", width: "140px", height: "140px", background: "var(--primary)", filter: "blur(60px)", opacity: 0.15 }} />
           <div style={{ position: "absolute", left: "-20px", bottom: "-20px", width: "100px", height: "100px", background: "#3b82f6", filter: "blur(50px)", opacity: 0.1 }} />
@@ -198,7 +261,7 @@ export default function Feed() {
       </div>
 
       {/* Category Tabs */}
-      <div style={{ display: "flex", gap: "10px", overflowX: "auto", padding: "16px 20px", scrollbarWidth: "none" }}>
+      <div id="tour-categories" style={{ display: "flex", gap: "10px", overflowX: "auto", padding: "16px 20px", scrollbarWidth: "none" }}>
         {categories.map(cat => (
           <button key={cat} onClick={() => setActiveTab(cat)} style={{
             padding: "9px 18px", borderRadius: "22px", fontSize: "13px", fontWeight: "700",
@@ -218,7 +281,7 @@ export default function Feed() {
 
       {/* Deal cards */}
       <div style={{ display: "flex", flexDirection: "column", gap: "20px", padding: "0 20px 100px" }}>
-        {groups.map(g => <DealCard key={g.id} group={g} />)}
+        {groups.map((g, index) => <div id={index === 0 ? "tour-first-deal" : undefined} key={g.id}><DealCard group={g} /></div>)}
       </div>
 
       <style jsx global>{`
